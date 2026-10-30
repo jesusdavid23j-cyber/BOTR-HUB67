@@ -1,0 +1,16 @@
+-- En un LocalScript dentro de StarterGui o StarterPlayerScripts
+local screenGui = Instance.new("ScreenGui")
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300) -- Ancho 400, Alto 300
+-- Posición: X = 0.5 (centro) con offset -200 (mitad del ancho), Y = 0 (arriba)
+mainFrame.Position = UDim2.new(0.5, -200, 0, 10)
+mainFrame.Parent = screenGui -- Ejemplo de lógica de Slider (pseudocódigo)
+local function onSpeedChanged(value)
+    local character = game.Players.LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = value -- El slider ya limita entre 16 y 50
+        end
+    end
+end
