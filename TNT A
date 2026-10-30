@@ -1,0 +1,163 @@
+-- Cargar la librería Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Crear la ventana principal con el Sistema de Key
+local Window = Rayfield:CreateWindow({
+   Name = "BOTR HUB - Hitbox & Aimbot",
+   LoadingTitle = "Verificando Key...",
+   LoadingSubtitle = "por BOTR HUB",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil,
+      FileName = "HitboxConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Sistema de Key",
+      Subtitle = "Introduce la key para continuar",
+      Note = "La key es: TNT",
+      FileName = "KeyHitboxHub",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"TNT"}
+   }
+})
+
+-- Servicios y Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local HitboxEnabled = false
+local HitboxSize = 1
+local PlayerSpeed = 16
+local AimbotEnabled = false
+local HoldingRightClick = false
+
+-- Detectar si se mantiene presionado el Click Derecho del mouse
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+   if input.UserInputType == Enum.UserInputType.MouseButton2 then
+      HoldingRightClick = true
+   end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+   if input.UserInputType == Enum.UserInputType.MouseButton2 then
+      HoldingRightClick = false
+   end
+end)
+
+-- Crear la pestaña principal
+local Tab = Window:CreateTab("Principal", 4483362458)
+
+-- Sección de Hitboxes
+local SectionHitbox = Tab:CreateSection("Configuración de Hitbox")
+
+local HitboxToggle = Tab:CreateToggle({
+   Name = "Activar Hitbox Roja (50%)",
+   CurrentValue = false,
+   Flag = "HitboxToggle",
+   Callback = function(Value)
+      HitboxEnabled = Value
+   end,
+})
+
+local HitboxSlider = Tab:CreateSlider({
+   Name = "Tamaño de Hitbox",
+   Range = {1, 50},
+   Increment = 1,
+   CurrentValue = 1,
+   Flag = "HitboxSizeSlider",
+   Callback = function(Value)
+      HitboxSize = Value
+   end,
+})
+
+-- Sección de Aimbot
+local SectionAimbot = Tab:CreateSection("Configuración de Aimbot")
+
+local AimbotToggle = Tab:CreateToggle({
+   Name = "Activar Aimbot a la Cabeza",
+   CurrentValue = false,
+   Flag = "AimbotToggle",
+   Callback = function(Value)
+      AimbotEnabled = Value
+   end,
+})
+
+-- Sección de Velocidad
+local SectionSpeed = Tab:CreateSection("Configuración de Velocidad")
+
+local SpeedSlider = Tab:CreateSlider({
+   Name = "Velocidad (Speed)",
+   Range = {16, 100},
+   Increment = 1,
+   CurrentValue = 16,
+   Flag = "SpeedSlider",
+   Callback = function(Value)
+      PlayerSpeed = Value
+      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+         LocalPlayer.Character.Humanoid.WalkSpeed = PlayerSpeed
+      end
+   end,
+})
+
+-- Bucle principal para Hitbox y Aimbot (RenderStepped)
+RunService.RenderStepped:Connect(function()
+   -- 1. Lógica de Hitbox
+   if HitboxEnabled then
+      for _, player in ipairs(Players:GetPlayers()) do
+         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            rootPart.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+            rootPart.Transparency = 0.5
+            rootPart.Color = Color3.fromRGB(255, 0, 0)
+            rootPart.Material = Enum.Material.Neon
+            rootPart.CanCollide = false
+         end
+      end
+   end
+
+   -- 2. Lógica de Aimbot a la cabeza (al mantener Click Derecho)
+   if AimbotEnabled and HoldingRightClick then
+      local closestPlayer = nil
+      local shortestDistance = math.huge
+
+      for _, player in ipairs(Players:GetPlayers()) do
+         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("Humanoid") then
+            if player.Character.Humanoid.Health > 0 then
+               local head = player.Character.Head
+               local screenPoint, onScreen = Camera:WorldToScreenPoint(head.Position)
+
+               if onScreen then
+                  local mouseLocation = UserInputService:GetMouseLocation()
+                  local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mouseLocation).Magnitude
+
+                  if distance < shortestDistance then
+                     shortestDistance = distance
+                     closestPlayer = head
+                  end
+               end
+            end
+         end
+      end
+
+      -- Si encuentra un jugador cercano, mueve la cámara hacia su cabeza
+      if closestPlayer then
+         Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Position)
+      end
+   end
+end)
+
+-- Mantener la velocidad si el personaje reaparece
+LocalPlayer.CharacterAdded:Connect(function(character)
+   local humanoid = character:WaitForChild("Humanoid")
+   humanoid.WalkSpeed = PlayerSpeed
+end)
