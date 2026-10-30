@@ -1,0 +1,128 @@
+-- Servicios necesarios
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Variables de Estado
+local AimbotEnabled = false
+local IsAiming = false
+local EspEnabled = false
+local MenuVisible = true
+
+-- Eliminar GUI anterior si ya existe para evitar duplicados
+if CoreGui:FindFirstChild("BotrMobileHub") then
+   CoreGui.BotrMobileHub:Destroy()
+end
+
+-- Crear la Interfaz Principal (ScreenGui)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BotrMobileHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- 1. Botón Flotante Principal (Para abrir/cerrar el menú - Arriba en el medio)
+local FloatingButton = Instance.new("TextButton")
+FloatingButton.Name = "FloatingButton"
+FloatingButton.Parent = ScreenGui
+FloatingButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+FloatingButton.BorderColor3 = Color3.fromRGB(255, 50, 50)
+FloatingButton.BorderSizePixel = 2
+FloatingButton.Position = UDim2.new(0.5, -60, 0, 15)
+FloatingButton.Size = UDim2.new(0, 120, 0, 40)
+FloatingButton.Font = Enum.Font.SourceSansBold
+FloatingButton.Text = "MENU: ON"
+FloatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatingButton.TextSize = 16
+
+local UICornerBtn = Instance.new("UICorner")
+UICornerBtn.CornerRadius = UDim.new(0, 10)
+UICornerBtn.Parent = FloatingButton
+
+-- 2. Menú Desplegable (Más alto para acomodar el nuevo botón)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderColor3 = Color3.fromRGB(60, 60, 60)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.5, -120, 0, 65)
+MainFrame.Size = UDim2.new(0, 240, 0, 210)
+MainFrame.Visible = true
+
+local UICornerFrame = Instance.new("UICorner")
+UICornerFrame.CornerRadius = UDim.new(0, 12)
+UICornerFrame.Parent = MainFrame
+
+-- Título
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+TitleLabel.Size = UDim2.new(1, 0, 0, 25)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "BOTR Mobile Hub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+TitleLabel.TextSize = 18
+
+-- Botón Toggle para Activar/Desactivar el Aimbot
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Parent = MainFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Position = UDim2.new(0.1, 0, 0, 45)
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 35)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Aimbot: [OFF]"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(0, 8)
+UICornerToggle.Parent = ToggleButton
+
+-- 3. Botón Táctil para Aim (Mantener pulsado)
+local HoldAimButton = Instance.new("TextButton")
+HoldAimButton.Parent = MainFrame
+HoldAimButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+HoldAimButton.BorderSizePixel = 0
+HoldAimButton.Position = UDim2.new(0.1, 0, 0, 90)
+HoldAimButton.Size = UDim2.new(0.8, 0, 0, 35)
+HoldAimButton.Font = Enum.Font.SourceSansBold
+HoldAimButton.Text = "🎯 MANTEN PULSADO AIM"
+HoldAimButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HoldAimButton.TextSize = 12
+
+local UICornerHold = Instance.new("UICorner")
+UICornerHold.CornerRadius = UDim.new(0, 8)
+UICornerHold.Parent = HoldAimButton
+
+-- 4. NUEVO BOTÓN: ESP Abajo para mirar personas
+local EspButton = Instance.new("TextButton")
+EspButton.Parent = MainFrame
+EspButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+EspButton.BorderSizePixel = 0
+EspButton.Position = UDim2.new(0.1, 0, 0, 135)
+EspButton.Size = UDim2.new(0.8, 0, 0, 35)
+EspButton.Font = Enum.Font.SourceSansBold
+EspButton.Text = "ESP: [OFF]"
+EspButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspButton.TextSize = 14
+
+local UICornerEsp = Instance.new("UICorner")
+UICornerEsp.CornerRadius = UDim.new(0, 8)
+UICornerEsp.Parent = EspButton
+
+-- --- SISTEMA DE ESP (Crear Highlights en los jugadores) ---
+local espCache = {}
+
+local function removeEsp(player)
+   if espCache[player] then
+      espCache[player]:Destroy()
+      espCache[player] = nil
+   end
+end
+
+local function addEsp(player)
+   
