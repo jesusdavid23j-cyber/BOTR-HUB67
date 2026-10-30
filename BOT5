@@ -1,0 +1,109 @@
+-- Cargar la librería Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Crear la ventana principal con el Sistema de Key
+local Window = Rayfield:CreateWindow({
+   Name = "Hitbox & Speed Hub",
+   LoadingTitle = "Verificando Key...",
+   LoadingSubtitle = "por ti",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil,
+      FileName = "HitboxConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = true, -- Activamos el sistema de keys
+   KeySettings = {
+      Title = "Sistema de Key",
+      Subtitle = "Introduce la key para continuar",
+      Note = "La key es: TNT",
+      FileName = "KeyHitboxHub", -- Nombre para guardar la key si lo deseas
+      SaveKey = true, -- Guarda la key para no tener que ponerla cada vez
+      GrabKeyFromSite = false, -- Usaremos una key local predefinida
+      Key = {"TNT"} -- La key requerida
+   }
+})
+
+-- Variables de configuración
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local HitboxEnabled = false
+local HitboxSize = 1
+local PlayerSpeed = 16
+
+-- Crear la pestaña principal
+local Tab = Window:CreateTab("Principal", 4483362458)
+
+-- Sección de Hitboxes
+local SectionHitbox = Tab:CreateSection("Configuración de Hitbox")
+
+-- Toggle para activar/desactivar Hitbox
+local HitboxToggle = Tab:CreateToggle({
+   Name = "Activar Hitbox Roja",
+   CurrentValue = false,
+   Flag = "HitboxToggle",
+   Callback = function(Value)
+      HitboxEnabled = Value
+   end,
+})
+
+-- Slider para el tamaño de la Hitbox (1 al 50)
+local HitboxSlider = Tab:CreateSlider({
+   Name = "Tamaño de Hitbox",
+   Range = {1, 50},
+   Increment = 1,
+   CurrentValue = 1,
+   Flag = "HitboxSizeSlider",
+   Callback = function(Value)
+      HitboxSize = Value
+   end,
+})
+
+-- Bucle para actualizar las Hitboxes de los enemigos/jugadores
+RunService.RenderStepped:Connect(function()
+   if not HitboxEnabled then return end
+   
+   for _, player in ipairs(Players:GetPlayers()) do
+      if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+         local rootPart = player.Character.HumanoidRootPart
+         
+         -- Modificar tamaño
+         rootPart.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+         -- Hacer la parte visible con color rojo y 50% de transparencia (0.5)
+         rootPart.Transparency = 0.5
+         rootPart.Color = Color3.fromRGB(255, 0, 0)
+         rootPart.Material = Enum.Material.Neon
+         rootPart.CanCollide = false
+      end
+   end
+end)
+
+-- Sección de Velocidad
+local SectionSpeed = Tab:CreateSection("Configuración de Velocidad")
+
+-- Slider para la velocidad (16 al 100)
+local SpeedSlider = Tab:CreateSlider({
+   Name = "Velocidad (Speed)",
+   Range = {16, 100},
+   Increment = 1,
+   CurrentValue = 16,
+   Flag = "SpeedSlider",
+   Callback = function(Value)
+      PlayerSpeed = Value
+      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+         LocalPlayer.Character.Humanoid.WalkSpeed = PlayerSpeed
+      end
+   end,
+})
+
+-- Mantener la velocidad si el personaje reaparece
+LocalPlayer.CharacterAdded:Connect(function(character)
+   local humanoid = character:WaitForChild("Humanoid")
+   humanoid.WalkSpeed = PlayerSpeed
+end)
