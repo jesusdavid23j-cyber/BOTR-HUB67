@@ -1,0 +1,170 @@
+--// Servicios necesarios
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--// Crear el ScreenGui principal si no existe
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomBlockSpinHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+--// 1. Botón Flotante para Abrir/Cerrar el Menú
+local openButton = Instance.new("TextButton")
+openButton.Name = "OpenButton"
+openButton.Size = UDim2.new(0, 130, 0, 40)
+openButton.Position = UDim2.new(0, 20, 0, 20)
+openButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+openButton.TextColor3 = Color3.fromRGB(0, 255, 128)
+openButton.Text = "🌀 Block Spin Hub"
+openButton.TextSize = 13
+openButton.Font = Enum.Font.GothamBold
+openButton.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0, 8)
+openCorner.Parent = openButton
+
+--// 2. Ventana Principal del Hub (MainFrame)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 420, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false -- Comienza cerrado
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+--// Barra Superior (Título y diseño)
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 12)
+topCorner.Parent = topBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(0, 255, 128)
+title.Text = "⚡ BLOCK SPIN - CREATED HUB ⚡"
+title.TextSize = 15
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+--// Contenedor de Botones (ScrollingFrame)
+local container = Instance.new("ScrollingFrame")
+container.Size = UDim2.new(1, -20, 1, -55)
+container.Position = UDim2.new(0, 10, 0, 48)
+container.BackgroundTransparency = 1
+container.BorderSizePixel = 0
+container.CanvasSize = UDim2.new(0, 0, 0, 300)
+container.ScrollBarThickness = 4
+container.Parent = mainFrame
+
+local uiList = Instance.new("UIListLayout")
+uiList.SortOrder = Enum.SortOrder.LayoutOrder
+uiList.Padding = UDim.new(0, 8)
+uiList.Parent = container
+
+--// Función para añadir botones de funciones fácilmente
+local function addFeature(name, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, 0, 0, 38)
+	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+	btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+	btn.Text = name
+	btn.TextSize = 13
+	btn.Font = Enum.Font.GothamMedium
+	btn.Parent = container
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+	
+	btn.MouseButton1Click:Connect(callback)
+end
+
+--// ==========================================
+--// 3. AÑADE TUS FUNCIONES PERSONALIZADAS AQUÍ
+--// ==========================================
+
+-- Ejemplo 1: Auto Spin (Girar bloque automáticamente si el juego lo usa)
+addFeature("🔄 Auto Spin (Simular Click/Giro)", function()
+	print("Auto Spin activado (Aquí puedes conectar la función de giro del juego)")
+	-- Ejemplo: game:GetService("ReplicatedStorage").Remotes.SpinEvent:FireServer()
+end)
+
+-- Ejemplo 2: Super Velocidad
+local speedOn = false
+addFeature("⚡ Alternar Super Velocidad", function()
+	speedOn = not speedOn
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then
+		char.Humanoid.WalkSpeed = speedOn and 50 or 16
+	end
+end)
+
+-- Ejemplo 3: Anti-AFK (Para que no te eche del servidor)
+addFeature("🛡️ Activar Anti-AFK", function()
+	local vu = game:GetService("VirtualUser")
+	player.Idled:Connect(function()
+		vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+		task.wait(1)
+		vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+	end)
+	print("Anti-AFK conectado correctamente.")
+end)
+
+--// 4. Sistema para abrir y cerrar el menú
+local function toggle()
+	mainFrame.Visible = not mainFrame.Visible
+end
+
+openButton.MouseButton1Click:Connect(toggle)
+UserInputService.InputBegan:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.RightControl then
+		toggle()
+	end
+end)
+
+--// 5. Sistema para poder arrastrar la ventana con el mouse
+local dragging, dragInput, dragStart, startPos
+topBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging and dragInput then
+		local delta = dragInput.Position - dragStart
+		mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
