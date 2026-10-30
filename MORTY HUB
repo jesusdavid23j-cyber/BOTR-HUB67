@@ -1,0 +1,44 @@
+-- Cargar una librería de interfaz gráfica
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Crear la ventana principal del Hub
+local Window = Rayfield:CreateWindow({
+   Name = "Morty Hub",
+   LoadingTitle = "Cargando Morty Hub...",
+   LoadingSubtitle = "por TuNombre",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "MortyHubConfig",
+      FileName = "BigHub"
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false -- Desactivar el sistema de llaves
+})
+
+-- Crear una pestaña
+local MainTab = Window:CreateTab("Principal", 4483362458) -- ID de icono opcional
+
+-- Crear una sección
+local Section = MainTab:CreateSection("Funciones Principales")
+
+-- Ejemplo de un botón
+local Button = MainTab:CreateButton({
+   Name = "Ejecutar Función 1",
+   Callback = function()
+       -- Coloca aquí el código que quieres que ejecute el botón
+       print("Botón presionado")
+   end,
+})
+
+-- Ejemplo de un Toggle (Interruptor)
+local Toggle = MainTab:CreateToggle({
+   Name = "Activar Opción",
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = function(Value)
+       -- Value será true o false según el estado del toggle
+       print("Estado del Toggle:", Value)
+   end,
+})
