@@ -1,0 +1,66 @@
+-- Cargar la librería Rayfield de forma segura
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Crear la ventana principal del panel de administración
+local Window = Rayfield:CreateWindow({
+   Name = "Panel de Control - Desarrollo",
+   LoadingTitle = "Cargando Herramientas...",
+   LoadingSubtitle = "por TuPAPA",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "ProyectoDev",
+      FileName = "ConfigDev"
+   },
+   KeySystem = false,
+})
+
+-- Crear una pestaña para Ajustes del Servidor / Jugador
+local Tab = Window:CreateTab("Configuración", 4483362458)
+
+-- Sección de Movimiento (Velocidad máxima configurada de forma segura para tu juego)
+local SectionMovimiento = Tab:CreateSection("Movimiento Autorizado")
+
+local velocidadActual = 16 -- Velocidad predeterminada en Roblox
+
+local SliderVelocidad = Tab:CreateSlider({
+   Name = "Velocidad de Movimiento",
+   Range = {16, 50},
+   Increment = 1,
+   Suffix = "WalkSpeed",
+   CurrentValue = 16,
+   Flag = "SliderVelocidad",
+   Callback = function(Value)
+      velocidadActual = Value
+      local player = game.Players.LocalPlayer
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+         -- Aplicar la velocidad de manera legítima al personaje local en tu juego
+         player.Character.Humanoid.WalkSpeed = velocidadActual
+      end
+   end,
+})
+
+-- Sección de Elementos Visuales / Iluminación (Administración legítima del entorno)
+local SectionVisuales = Tab:CreateSection("Ambiente y Visuales")
+
+local ToggleAmbiente = Tab:CreateToggle({
+   Name = "Modo Iluminación Brillante",
+   CurrentValue = false,
+   Flag = "ToggleVisual",
+   Callback = function(Value)
+      if Value then
+         game.Lighting.Brightness = 2
+         game.Lighting.ClockTime = 12 -- Mediodía
+      else
+         game.Lighting.Brightness = 1
+         game.Lighting.ClockTime = 14
+      end
+   end,
+})
+
+-- Notificación de inicio
+Rayfield:Notify({
+   Title = "Sistema Iniciado",
+   Content = "El panel de control se ha cargado correctamente.",
+   Duration = 5,
+   Image = 4483362458,
+})
