@@ -1,0 +1,166 @@
+-- Servicios necesarios
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Variables de Estado
+local AimbotEnabled = false
+local HoldingRightClick = false
+local MenuVisible = true
+
+-- Eliminar GUI anterior si ya existe para evitar duplicados
+if CoreGui:FindFirstChild("BotrAimbotHub") then
+   CoreGui.BotrAimbotHub:Destroy()
+end
+
+-- Crear la Interfaz Principal (ScreenGui)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BotrAimbotHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- 1. Botón Flotante (Arriba en el medio)
+local FloatingButton = Instance.new("TextButton")
+FloatingButton.Name = "FloatingButton"
+FloatingButton.Parent = ScreenGui
+FloatingButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+FloatingButton.BorderColor3 = Color3.fromRGB(255, 50, 50)
+FloatingButton.BorderSizePixel = 2
+FloatingButton.Position = UDim2.new(0.5, -60, 0, 10) -- Arriba en el medio exacto
+FloatingButton.Size = UDim2.new(0, 120, 0, 35)
+FloatingButton.Font = Enum.Font.SourceSansBold
+FloatingButton.Text = "MENU: ON"
+FloatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatingButton.TextSize = 14
+
+local UICornerBtn = Instance.new("UICorner")
+UICornerBtn.CornerRadius = UDim.new(0, 8)
+UICornerBtn.Parent = FloatingButton
+
+-- 2. Menú Principal (Ventana)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderColor3 = Color3.fromRGB(60, 60, 60)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.5, -110, 0, 55) -- Justo debajo del botón flotante
+MainFrame.Size = UDim2.new(0, 220, 0, 140)
+MainFrame.Visible = true
+
+local UICornerFrame = Instance.new("UICorner")
+UICornerFrame.CornerRadius = UDim.new(0, 10)
+UICornerFrame.Parent = MainFrame
+
+-- Título del Menú
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+TitleLabel.Size = UDim2.new(1, 0, 0, 25)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "BOTR Aimbot Hub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+TitleLabel.TextSize = 16
+
+-- Toggle Button (Activar/Desactivar Aimbot)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Parent = MainFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Position = UDim2.new(0.1, 0, 0, 45)
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 35)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Aimbot Cabeza: [OFF]"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(0, 6)
+UICornerToggle.Parent = ToggleButton
+
+-- Etiqueta de información de uso
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Parent = MainFrame
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Position = UDim2.new(0, 0, 0, 90)
+InfoLabel.Size = UDim2.new(1, 0, 0, 35)
+InfoLabel.Font = Enum.Font.SourceSansItalic
+InfoLabel.Text = "Mantén Click Derecho\npara apuntar a la cabeza"
+InfoLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+InfoLabel.TextSize = 11
+
+-- --- LÓGICA DE FUNCIONAMIENTO ---
+
+-- Abrir y cerrar menú con el botón flotante
+FloatingButton.MouseButton1Click:Connect(function()
+   MenuVisible = not MenuVisible
+   MainFrame.Visible = MenuVisible
+   if MenuVisible then
+      FloatingButton.Text = "MENU: ON"
+      FloatingButton.BorderColor3 = Color3.fromRGB(255, 50, 50)
+   else
+      FloatingButton.Text = "MENU: OFF"
+      FloatingButton.BorderColor3 = Color3.fromRGB(100, 100, 100)
+   end
+end)
+
+-- Activar/Desactivar Aimbot desde el botón del menú
+ToggleButton.MouseButton1Click:Connect(function()
+   AimbotEnabled = not AimbotEnabled
+   if AimbotEnabled then
+      ToggleButton.Text = "Aimbot Cabeza: [ON]"
+      ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+   else
+      ToggleButton.Text = "Aimbot Cabeza: [OFF]"
+      ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+   end
+end)
+
+-- Detectar Click Derecho (para computadoras)
+UserInputService.InputBegan:Connect(function(input)
+   if input.UserInputType == Enum.UserInputType.MouseButton2 then
+      HoldingRightClick = true
+   end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+   if input.UserInputType == Enum.UserInputType.MouseButton2 then
+      HoldingRightClick = false
+   end
+end)
+
+-- Bucle principal del Aimbot (RenderStepped)
+RunService.RenderStepped:Connect(function()
+   if AimbotEnabled and HoldingRightClick then
+      local closestPlayer = nil
+      local shortestDistance = math.huge
+
+      for _, player in ipairs(Players:GetPlayers()) do
+         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("Humanoid") then
+            if player.Character.Humanoid.Health > 0 then
+               local head = player.Character.Head
+               local screenPoint, onScreen = Camera:WorldToScreenPoint(head.Position)
+
+               if onScreen then
+                  local mouseLocation = UserInputService:GetMouseLocation()
+                  local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mouseLocation).Magnitude
+
+                  if distance < shortestDistance then
+                     shortestDistance = distance
+                     closestPlayer = head
+                  end
+               end
+            end
+         end
+      end
+
+      -- Mover la cámara directamente hacia la cabeza del objetivo más cercano
+      if closestPlayer then
+         Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Position)
+      end
+   end
+end)
