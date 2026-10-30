@@ -1,0 +1,52 @@
+-- Asegúrate de cargar la librería de Rayfield en tu entorno de desarrollo autorizado
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Crear la ventana principal con tema oscuro/verde
+local Window = Rayfield:CreateWindow({
+   Name = "Mi Juego - Panel de Control",
+   LoadingTitle = "Cargando interfaz...",
+   LoadingSubtitle = "por TuNombre",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "MiJuegoConfig",
+      FileName = "Config"
+   },
+   KeySystem = false, -- Sistema de claves (opcional)
+})
+
+-- Crear una pestaña
+local Tab = Window:CreateTab("General", 4483362458) -- Puedes cambiar el ID del icono
+
+-- Crear una sección dentro de la pestaña
+local Section = Tab:CreateSection("Configuración del Jugador")
+
+-- Ejemplo de un botón interactivo
+local Button = Tab:CreateButton({
+   Name = "Activar Efecto Visual",
+   Callback = function()
+      -- Código legítimo para tu juego (ej. cambiar color de iluminación, partículas, etc.)
+      print("¡Botón presionado!")
+   end,
+})
+
+-- Ejemplo de un interruptor (Toggle)
+local Toggle = Tab:CreateToggle({
+   Name = "Modo Nocturno",
+   CurrentValue = false,
+   Flag = "Toggle1", -- Identificador para guardar configuración
+   Callback = function(Value)
+      if Value then
+         game.Lighting.ClockTime = 0 -- Cambiar hora a medianoche
+      else
+         game.Lighting.ClockTime = 14 -- Volver al día
+      end
+   end,
+})
+
+-- Notificación inicial
+Rayfield:Notify({
+   Title = "Interfaz Lista",
+   Content = "El menú se ha cargado correctamente.",
+   Duration = 6.5,
+   Image = 4483362458,
+})
