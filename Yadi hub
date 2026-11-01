@@ -1,0 +1,236 @@
+-- BOTR-HUB / Script personalizado para yadi
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Variables de Estado
+local ESPEnabled = false
+local AimbotEnabled = false
+local SpeedEnabled = false
+local SpinbotEnabled = false
+local WalkSpeedValue = 30
+local SpinSpeed = 50
+
+-- Crear Interfaz Gráfica (UI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "YadiHubGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 220, 0, 310)
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.Text = "yadi"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+-- Función para crear botones modernos
+local function createButton(name, positionY, text)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9, 0, 0, 40)
+	btn.Position = UDim2.new(0.05, 0, 0, positionY)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = text .. ": OFF"
+	btn.TextSize = 14
+	btn.Font = Enum.Font.SourceSansSemibold
+	btn.Parent = MainFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+	return btn
+end
+
+local ESPBtn = createButton("ESP", 55, "ESP [yadi]")
+local AimbotBtn = createButton("Aimbot", 105, "Aimbot")
+local SpeedBtn = createButton("Speed", 155, "Speed")
+local SpinbotBtn = createButton("Spinbot", 205, "Spinbot")
+
+-- Botón para minimizar / cerrar menú (Tecla RightShift también funciona)
+local ToggleInfo = Instance.new("TextLabel")
+ToggleInfo.Size = UDim2.new(1, 0, 0, 30)
+ToggleInfo.Position = UDim2.new(0, 0, 1, -35)
+ToggleInfo.BackgroundTransparency = 1
+ToggleInfo.Text = "Presiona [RightShift] para abrir/cerrar"
+ToggleInfo.TextColor3 = Color3.fromRGB(150, 150, 150)
+ToggleInfo.TextSize = 11
+ToggleInfo.Font = Enum.Font.SourceSansItalic
+ToggleInfo.Parent = MainFrame
+
+-- Lógica para abrir y cerrar con RightShift
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if input.KeyCode == Enum.KeyCode.RightShift then
+		MainFrame.Visible = not MainFrame.Visible
+	end
+end)
+
+-- --- ESP ---
+local espCache = {}
+
+local function removeESP(player)
+	if espCache[player] then
+		for _, obj in pairs(espCache[player]) do
+			obj:Remove()
+		end
+		espCache[player] = nil
+	end
+end
+
+local function addESP(player)
+	if player == LocalPlayer then return end
+	
+	local box = Drawing.new("Square")
+	box.Visible = false
+	box.Color = Color3.fromRGB(0, 255, 255)
+	box.Thickness = 1.5
+	box.Filled = false
+
+	local nameTag = Drawing.new("Text")
+	nameTag.Visible = false
+	nameTag.Color = Color3.fromRGB(255, 255, 255)
+	nameTag.Size = 14
+	nameTag.Center = true
+	nameTag.Outline = true
+
+	espCache[player] = {Box = box, Name = nameTag}
+
+	player.CharacterRemoving:Connect(function()
+		removeESP(player)
+	end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do addESP(p) end
+Players.PlayerAdded:Connect(addESP)
+Players.PlayerRemoving:Connect(removeESP)
+
+RunService.RenderStepped:Connect(function()
+	for player, cache in pairs(espCache) do
+		local char = player.Character
+		if ESPEnabled and char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+			local hrp = char.HumanoidRootPart
+			local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+			
+			if onScreen then
+				local head = char:FindFirstChild("Head")
+				local top = head and Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or vector
+				local bottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+				local height = math.abs(top.Y - bottom.Y)
+				local width = height / 2
+
+				cache.Box.Size = Vector2.new(width, height)
+				cache.Box.Position = Vector2.new(vector.X - width / 2, top.Y)
+				cache.Box.Visible = true
+
+				cache.Name.Text = "yadi - " .. player.Name
+				cache.Name.Position = Vector2.new(vector.X, top.Y - 18)
+				cache.Name.Visible = true
+			else
+				cache.Box.Visible = false
+				cache.Name.Visible = false
+			end
+		else
+			cache.Box.Visible = false
+			cache.Name.Visible = false
+		end
+	end
+end)
+
+ESPBtn.MouseButton1Click:Connect(function()
+	ESPEnabled = not ESPEnabled
+	ESPBtn.Text = "ESP [yadi]: " .. (ESPEnabled and "ON" or "OFF")
+	ESPBtn.BackgroundColor3 = ESPEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(50, 50, 50)
+	if not ESPEnabled then
+		for _, cache in pairs(espCache) do
+			cache.Box.Visible = false
+			cache.Name.Visible = false
+		end
+	end
+end)
+
+-- --- AIMBOT ---
+local function getClosestPlayer()
+	local closestPlayer = nil
+	local shortestDistance = math.huge
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+			local pos, onScreen = Camera:WorldToViewportPoint(player.Character.Head.Position)
+			if onScreen then
+				local distance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(pos.X, pos.Y)).Magnitude
+				if distance < shortestDistance then
+					shortestDistance = distance
+					closestPlayer = player
+				end
+			end
+		end
+	end
+	return closestPlayer
+end
+
+RunService.RenderStepped:Connect(function()
+	if AimbotEnabled then
+		local target = getClosestPlayer()
+		if target and target.Character and target.Character:FindFirstChild("Head") then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+		end
+	end
+end)
+
+AimbotBtn.MouseButton1Click:Connect(function()
+	AimbotEnabled = not AimbotEnabled
+	AimbotBtn.Text = "Aimbot: " .. (AimbotEnabled and "ON" or "OFF")
+	AimbotBtn.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(50, 50, 50)
+end)
+
+-- --- SPEED ---
+RunService.Heartbeat:Connect(function()
+	if SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.WalkSpeed = WalkSpeedValue
+	end
+end)
+
+SpeedBtn.MouseButton1Click:Connect(function()
+	SpeedEnabled = not SpeedEnabled
+	SpeedBtn.Text = "Speed: " .. (SpeedEnabled and "ON" or "OFF")
+	SpeedBtn.BackgroundColor3 = SpeedEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(50, 50, 50)
+	if not SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.WalkSpeed = 16
+	end
+end)
+
+-- --- SPINBOT ---
+RunService.RenderStepped:Connect(function()
+	if SpinbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		local hrp = LocalPlayer.Character.HumanoidRootPart
+		hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(SpinSpeed), 0)
+	end
+end)
+
+SpinbotBtn.MouseButton1Click:Connect(function()
+	SpinbotEnabled = not SpinbotEnabled
+	SpinbotBtn.Text = "Spinbot: " .. (SpinbotEnabled and "ON" or "OFF")
+	SpinbotBtn.BackgroundColor3 = SpinbotEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(50, 50, 50)
+end)
