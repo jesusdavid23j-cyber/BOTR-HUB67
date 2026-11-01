@@ -1,0 +1,281 @@
+-- // Santana Hub - Script con Sistema de Key // --
+
+-- Servicios de Roblox
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Variables de Configuración
+getgenv().SantanaHub = {
+    SpeedEnabled = false,
+    WalkSpeed = 16,
+    AimbotEnabled = false,
+    MagicBulletEnabled = false,
+    AimbotKey = Enum.UserInputType.MouseButton2 -- Click Derecho por defecto
+}
+
+-- Interfaz Gráfica Principal (KeySystem)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SantanaHubGui"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- // VENTANA DE KEY // --
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Name = "KeyFrame"
+KeyFrame.Parent = ScreenGui
+KeyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -100)
+KeyFrame.Size = UDim2.new(0, 250, 0, 200)
+
+local KeyCorner = Instance.new("UICorner")
+KeyCorner.Parent = KeyFrame
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Parent = KeyFrame
+KeyTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeyTitle.Size = UDim2.new(0, 250, 0, 40)
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Text = "Santana Hub - Key"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyTitle.TextSize = 16
+
+local KeyTitleCorner = Instance.new("UICorner")
+KeyTitleCorner.Parent = KeyTitle
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.Parent = KeyFrame
+KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyBox.Position = UDim2.new(0, 15, 0, 65)
+KeyBox.Size = UDim2.new(0, 220, 0, 35)
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.PlaceholderText = "Introduce la Key..."
+KeyBox.Text = ""
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.TextSize = 14
+
+local KeyBoxCorner = Instance.new("UICorner")
+KeyBoxCorner.Parent = KeyBox
+
+local SubmitBtn = Instance.new("TextButton")
+SubmitBtn.Parent = KeyFrame
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+SubmitBtn.Position = UDim2.new(0, 15, 0, 115)
+SubmitBtn.Size = UDim2.new(0, 220, 0, 35)
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "Comprobar Key"
+SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitBtn.TextSize = 14
+
+local SubmitCorner = Instance.new("UICorner")
+SubmitCorner.Parent = SubmitBtn
+
+local ErrorLabel = Instance.new("TextLabel")
+ErrorLabel.Parent = KeyFrame
+ErrorLabel.BackgroundTransparency = 1
+ErrorLabel.Position = UDim2.new(0, 15, 0, 160)
+ErrorLabel.Size = UDim2.new(0, 220, 0, 20)
+ErrorLabel.Font = Enum.Font.Gotham
+ErrorLabel.Text = ""
+ErrorLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+ErrorLabel.TextSize = 12
+
+-- // VENTANA PRINCIPAL (Oculta hasta poner la Key) // --
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 250, 0, 300)
+MainFrame.Visible = false -- Oculto inicialmente
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Size = UDim2.new(0, 250, 0, 40)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Santana Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.Parent = Title
+
+local function CreateButton(name, text, positionY)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Parent = MainFrame
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.Position = UDim2.new(0, 15, 0, positionY)
+    btn.Size = UDim2.new(0, 220, 0, 35)
+    btn.Font = Enum.Font.Gotham
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = btn
+    return btn
+end
+
+-- Botones del Hub Principal
+local SpeedBtn = CreateButton("SpeedBtn", "Speed: 16 (OFF)", 55)
+local AimbotBtn = CreateButton("AimbotBtn", "Aimbot (OFF)", 105)
+local MagicBulletBtn = CreateButton("MagicBulletBtn", "Balas Mágicas (OFF)", 155)
+
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Parent = MainFrame
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Position = UDim2.new(0, 15, 0, 205)
+SpeedLabel.Size = UDim2.new(0, 220, 0, 20)
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.Text = "Velocidad (16 - 100):"
+SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+SpeedLabel.TextSize = 12
+
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Parent = MainFrame
+SpeedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpeedBox.Position = UDim2.new(0, 15, 0, 230)
+SpeedBox.Size = UDim2.new(0, 220, 0, 30)
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.Text = "16"
+SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBox.TextSize = 14
+
+local BoxCorner = Instance.new("UICorner")
+BoxCorner.Parent = SpeedBox
+
+-- // LÓGICA DE VALIDACIÓN DE KEY // --
+SubmitBtn.MouseButton1Click:Connect(function()
+    if KeyBox.Text == "Elpapadegael" then
+        KeyFrame.Visible = false
+        MainFrame.Visible = true
+    else
+        ErrorLabel.Text = "Key incorrecta. Inténtalo de nuevo."
+    end
+end)
+
+-- // 1. SISTEMA DE VELOCIDAD (16 - 100) // --
+SpeedBox.FocusLost = function(enterPressed)
+    local val = tonumber(SpeedBox.Text)
+    if val then
+        if val < 16 then val = 16 end
+        if val > 100 then val = 100 end
+        getgenv().SantanaHub.WalkSpeed = val
+        SpeedBox.Text = tostring(val)
+        if getgenv().SantanaHub.SpeedEnabled then
+            SpeedBtn.Text = "Speed: " .. val .. " (ON)"
+        end
+    else
+        SpeedBox.Text = tostring(getgenv().SantanaHub.WalkSpeed)
+    end
+end
+
+SpeedBtn.MouseButton1Click:Connect(function()
+    getgenv().SantanaHub.SpeedEnabled = not getgenv().SantanaHub.SpeedEnabled
+    if getgenv().SantanaHub.SpeedEnabled then
+        SpeedBtn.Text = "Speed: " .. getgenv().SantanaHub.WalkSpeed .. " (ON)"
+        SpeedBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        SpeedBtn.Text = "Speed: " .. getgenv().SantanaHub.WalkSpeed .. " (OFF)"
+        SpeedBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().SantanaHub.SpeedEnabled then
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = getgenv().SantanaHub.WalkSpeed
+            end
+        end)
+    end
+end)
+
+-- // 2. SISTEMA DE AIMBOT // --
+local function GetClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                    if magnitude < shortestDistance then
+                        shortestDistance = magnitude
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+AimbotBtn.MouseButton1Click:Connect(function()
+    getgenv().SantanaHub.AimbotEnabled = not getgenv().SantanaHub.AimbotEnabled
+    if getgenv().SantanaHub.AimbotEnabled then
+        AimbotBtn.Text = "Aimbot (ON)"
+        AimbotBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        AimbotBtn.Text = "Aimbot (OFF)"
+        AimbotBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().SantanaHub.AimbotEnabled and UserInputService:IsMouseButtonPressed(getgenv().SantanaHub.AimbotKey) then
+        pcall(function()
+            local target = GetClosestPlayer()
+            if target and target.Character and target.Character:FindFirstChild("Head") then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+            end
+        end)
+    end
+end)
+
+-- // 3. SISTEMA DE BALAS MÁGICAS (MAGIC BULLETS) // --
+MagicBulletBtn.MouseButton1Click:Connect(function()
+    getgenv().SantanaHub.MagicBulletEnabled = not getgenv().SantanaHub.MagicBulletEnabled
+    if getgenv().SantanaHub.MagicBulletEnabled then
+        MagicBulletBtn.Text = "Balas Mágicas (ON)"
+        MagicBulletBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        MagicBulletBtn.Text = "Balas Mágicas (OFF)"
+        MagicBulletBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if getgenv().SantanaHub.MagicBulletEnabled then
+        pcall(function()
+            local target = GetClosestPlayer()
+            if target and target.Character and target.Character:FindFirstChild("Head") then
+                local targetHead = target.Character.Head
+                for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        for _, v in ipairs(workspace:GetChildren()) do
+                            if v.Name == "Bullet" or v.Name == "Projectile" then
+                                v.Position = targetHead.Position
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+print("Santana Hub cargado correctamente. Introduce la key para continuar.")
