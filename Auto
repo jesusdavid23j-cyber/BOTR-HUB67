@@ -1,0 +1,16 @@
+-- SEXYBOY SCRIPTS // BlooSpin Main Entry
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Config = {
+    ESP_Box = true,
+    ESP_Health = true,
+    ESP_Inventory = true,
+    ESP_Distance = true,
+    SilentAim_RPG = true,
+    SilentAim_Weapons = true,
+    UnderMap = false,
+    AutoFarm = true
+}
+
+print("[SEXYBOY] Initializing BlooSpin Hub for " .. LocalPlayer.Name)
